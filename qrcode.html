@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        #qr-reader {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        #qr-reader-results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #result-container {
+            display: none;
+            margin-top: 30px;
+        }
+        .result-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .result-text {
+            word-break: break-all;
+            margin-bottom: 15px;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        .link-button {
+            background-color: #34a853;
+        }
+        .link-button:hover {
+            background-color: #2e8b57;
+        }
+        .copy-button {
+            background-color: #fbbc05;
+        }
+        .copy-button:hover {
+            background-color: #f9a602;
+        }
+        .restart-button {
+            background-color: #ea4335;
+        }
+        .restart-button:hover {
+            background-color: #d33426;
+        }
+        footer {
+            margin-top: 50px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code Scanner</h1>
+    
+    <div id="qr-reader"></div>
+    
+    <div id="result-container">
+        <div class="result-card">
+            <h2>Scan Result:</h2>
+            <div id="result-text" class="result-text"></div>
+            
+            <div class="buttons">
+                <button id="copy-btn" class="copy-button">Copy Text</button>
+                <button id="link-btn" class="link-button">Open Link</button>
+                <button id="restart-btn" class="restart-button">Scan Again</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>This QR Code scanner works on most modern browsers and devices.</p>
+    </footer>
+
+    <script>
+        function onScanSuccess(decodedText, decodedResult) {
+            // Stop the scanner
+            html5QrcodeScanner.clear();
+            
+            // Display the result
+            document.getElementById('result-container').style.display = 'block';
+            document.getElementById('result-text').textContent = decodedText;
+            
+            // Enable/disable link button based on whether result is a URL
+            const linkBtn = document.getElementById('link-btn');
+            if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
+                linkBtn.onclick = function() {
+                    window.open(decodedText, '_blank');
+                };
+                linkBtn.disabled = false;
+            } else {
+                linkBtn.disabled = true;
+            }
+            
+            // Set up copy button
+            document.getElementById('copy-btn').onclick = function() {
+                navigator.clipboard.writeText(decodedText)
+                    .then(() => {
+                        alert('Text copied to clipboard!');
+                    })
+                    .catch(err => {
+                        console.error('Could not copy text: ', err);
+                    });
+            };
+            
+            // Set up restart button
+            document.getElementById('restart-btn').onclick = function() {
+                document.getElementById('result-container').style.display = 'none';
+                initScanner();
+            };
+        }
+
+        function onScanFailure(error) {
+            // Handle scan failure, usually better to ignore and keep scanning
+            console.warn(`QR code scanning failed: ${error}`);
+        }
+
+        function initScanner() {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "qr-reader", 
+                { 
+                    fps: 10, 
+                    qrbox: {width: 250, height: 250},
+                    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+                }, 
+                /* verbose= */ false);
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+
+        // Initialize the scanner when page loads
+        let html5QrcodeScanner;
+        document.addEventListener('DOMContentLoaded', function() {
+            initScanner();
+        });
+    </script>
+</body>
+</html>
